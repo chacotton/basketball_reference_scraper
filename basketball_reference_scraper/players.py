@@ -2,6 +2,7 @@ import pandas as pd
 from requests import get
 from bs4 import BeautifulSoup
 
+
 try:
     from utils import get_player_suffix
     from lookup import lookup
@@ -10,8 +11,11 @@ except:
     from basketball_reference_scraper.lookup import lookup
 
 def get_stats(_name, stat_type='PER_GAME', playoffs=False, career=False, ask_matches = True):
-    name = lookup(_name, ask_matches)
-    suffix = get_player_suffix(name)
+    if ' ' in _name:
+        name = lookup(_name, ask_matches)
+        suffix = get_player_suffix(name)
+    else:
+        suffix = f'/players/{_name[0].lower()}/{_name.lower()}.html'
     if suffix:
         suffix = suffix.replace('/', '%2F')
     else:
@@ -26,6 +30,10 @@ def get_stats(_name, stat_type='PER_GAME', playoffs=False, career=False, ask_mat
         if table is None:
             return pd.DataFrame()
         df = pd.read_html(str(table))[0]
+        try:
+            df.columns = [c[1].split('/')[-1] for c in df.columns]
+        except IndexError:
+            pass
         df.rename(columns={'Season': 'SEASON', 'Age': 'AGE',
                   'Tm': 'TEAM', 'Lg': 'LEAGUE', 'Pos': 'POS'}, inplace=True)
         if 'FG.1' in df.columns:
@@ -40,14 +48,18 @@ def get_stats(_name, stat_type='PER_GAME', playoffs=False, career=False, ask_mat
             df = df.iloc[career_index+2:, :]
         else:
             df = df.iloc[:career_index, :]
+        df.SEASON = df.SEASON.apply(lambda x: int(x[:4]) + 1)
 
         df = df.reset_index().drop('index', axis=1)
         return df
 
 
 def get_game_logs(_name, year, playoffs=False, ask_matches=True):
-    name = lookup(_name, ask_matches)
-    suffix = get_player_suffix(name).replace('/', '%2F').replace('.html', '')
+    if ' ' in _name:
+        name = lookup(_name, ask_matches)
+        suffix = get_player_suffix(name)
+    else:
+        suffix = f'/players/{_name[0].lower()}/{_name.lower()}.html'
     if playoffs:
         selector = 'div_pgl_basic_playoffs'
     else:
