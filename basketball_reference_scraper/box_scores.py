@@ -23,7 +23,7 @@ def get_box_scores(date, team1, team2, period='GAME', stat_type='BASIC'):
         #soup = BeautifulSoup(rq.content, 'html.parser')
         #table = soup.find('table')
         raw_df = pd.read_html(rq)[0]
-        ids = pd.read_html(rq, extract_links='all')[0].iloc[:,0].apply(lambda x: x[1].split('/')[-1].strip('.html') if x[1] is not None else None).values
+        ids = pd.read_html(rq, extract_links='all')[0].iloc[:,0].apply(lambda x: x[1].split('/')[-1].rstrip('.html') if x[1] is not None else None).values
         raw_df[('Basic Box Score Stats', 'player_id')] = ids
         df = _process_box(raw_df)
         #if rq == r1:
