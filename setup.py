@@ -26,7 +26,7 @@ setuptools.setup(
         'bs4==0.0.1',
         'lxml==4.6.5',
         'numpy==1.21.0',
-        'pandas==1.3.1',
+        'pandas==1.5.0rc0',
         'python-dateutil==2.8.1',
         'pytz==2019.3',
         'requests==2.27.1',
