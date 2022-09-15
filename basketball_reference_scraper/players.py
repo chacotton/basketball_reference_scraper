@@ -57,19 +57,21 @@ def get_stats(_name, stat_type='PER_GAME', playoffs=False, career=False, ask_mat
 def get_game_logs(_name, year, playoffs=False, ask_matches=True):
     if ' ' in _name:
         name = lookup(_name, ask_matches)
-        suffix = get_player_suffix(name)
+        suffix = get_player_suffix(name).split('/')[-1].rstrip('.html')
     else:
-        suffix = f'/players/{_name[0].lower()}/{_name.lower()}.html'
+        suffix = _name
     if playoffs:
         selector = 'div_pgl_basic_playoffs'
     else:
-        selector = 'div_pgl_basic'
-    r = get(f'https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url={suffix}%2Fgamelog%2F{year}%2F&div={selector}')
+        selector = 'pgl_basic'
+    r = get(f'https://www.basketball-reference.com/players/{suffix[:1]}/{suffix}/gamelog/{year}#{selector}')
     if r.status_code==200:
-        soup = BeautifulSoup(r.content, 'html.parser')
-        table = soup.find('table')
+        table = f"https://www.basketball-reference.com/players/{suffix[:1]}/{suffix}/gamelog/{year}#{selector}"#soup.find('table')
         if table:
-            df = pd.read_html(str(table))[0]
+            try:
+                df = pd.read_html(str(table))[-1]
+            except:
+                return pd.DataFrame()
             df.rename(columns = {'Date': 'DATE', 'Age': 'AGE', 'Tm': 'TEAM', 'Unnamed: 5': 'HOME/AWAY', 'Opp': 'OPPONENT',
                 'Unnamed: 7': 'RESULT', 'GmSc': 'GAME_SCORE'}, inplace=True)
             df['HOME/AWAY'] = df['HOME/AWAY'].apply(lambda x: 'AWAY' if x=='@' else 'HOME')
@@ -139,3 +141,4 @@ def get_player_splits(_name, season_end_year, stat_type='PER_GAME', ask_matches=
                     return df
             else:
                 raise Exception('The "stat_type" you entered does not exist. The following options are: PER_GAME, SHOOTING, ADVANCED, TOTALS')
+
