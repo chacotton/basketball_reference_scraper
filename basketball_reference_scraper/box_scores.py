@@ -14,24 +14,21 @@ except:
 
 def get_box_scores(date, team1, team2, period='GAME', stat_type='BASIC'):
     date = pd.to_datetime(date)
-    suffix = get_game_suffix(date, team1, team2).replace('/', '%2F')
-    r1 = f'https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url={suffix}&div=div_box-{team1}-{period.lower()}-{stat_type.lower()}'
-    r2 = f'https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url={suffix}&div=div_box-{team2}-{period.lower()}-{stat_type.lower()}'
+    date = date.strftime('%Y%m%d')
+    link = f'https://www.basketball-reference.com/boxscores/{date}0{team1}.html'
+    if get(link).status_code != 200:
+        link = f'https://www.basketball-reference.com/boxscores/{date}0{team2}.html'
     dfs = []
-    #if r1.status_code==200 and r2.status_code==200:
-    for rq in (r1, r2):
-        #soup = BeautifulSoup(rq.content, 'html.parser')
-        #table = soup.find('table')
-        raw_df = pd.read_html(rq)[0]
-        ids = pd.read_html(rq, extract_links='all')[0].iloc[:,0].apply(lambda x: x[1].split('/')[-1].rstrip('.html') if x[1] is not None else None).values
-        raw_df[('Basic Box Score Stats', 'player_id')] = ids
-        df = _process_box(raw_df)
-        #if rq == r1:
-        #    df['PLAYER'] = df['PLAYER'].apply(lambda name: remove_accents(name, team1, date.year))
-        #if rq == r2:
-        #     df['PLAYER'] = df['PLAYER'].apply(lambda name: remove_accents(name, team2, date.year))
-        dfs.append(df)
-    return {team1: dfs[0], team2: dfs[1]}
+    r1 = f'box-{team1}-{period.lower()}-{stat_type.lower()}'
+    r2 = f'box-{team2}-{period.lower()}-{stat_type.lower()}'
+    if get(link).status_code == 200:
+        for rq in (r1, r2):
+            raw_df = pd.read_html(link, attrs={'id': rq})[0]
+            ids = pd.read_html(link, attrs={'id': rq}, extract_links='all')[0].iloc[:,0].apply(lambda x: x[1].split('/')[-1].rstrip('.html') if x[1] is not None else None).values
+            raw_df[('Basic Box Score Stats', 'player_id')] = ids
+            df = _process_box(raw_df)
+            dfs.append(df)
+        return {team1: dfs[0], team2: dfs[1]}
 
 def _process_box(df):
     """ Perform basic processing on a box score - common to both methods
@@ -98,4 +95,5 @@ def get_all_star_box_score(year: int):
         return res 
     else:
         raise ConnectionError('Request to basketball reference failed')
+
 

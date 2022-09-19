@@ -22,7 +22,7 @@ setuptools.setup(
     ],
     python_requires=">=3.6",
     install_requires=[
-        'beautifulsoup4==4.8.2',
+        'beautifulsoup4==4.11.1',
         'bs4==0.0.1',
         'lxml==4.6.5',
         'numpy==1.21.0',
