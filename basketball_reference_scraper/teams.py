@@ -147,7 +147,7 @@ def get_team_ratings(*, team=[], season_end_year: int):
         # Clean columns and indexes
         df = df.droplevel(level=0, axis=1)
         
-        df.drop(columns=['Rk', 'Conf', 'Div', 'W', 'L', 'W/L%'], inplace=True)
+        df.drop(columns=['Rk'], inplace=True)
         upper_cols = list(pd.Series(df.columns).apply(lambda x: x.upper()))
         df.columns = upper_cols
 
